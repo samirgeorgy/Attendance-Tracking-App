@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 using Michsky.UI.ModernUIPack;
 
@@ -10,8 +11,15 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private NotificationManager _userNotification;
     [SerializeField] private CustomDropdown _dllClasses;
+    [SerializeField] private CustomDropdown _dllServants;
     [SerializeField] private Sprite _notificationIcon;
     [SerializeField] private Sprite _classIcon;
+    [SerializeField] private Text _dateText;
+    [SerializeField] private Text _connectionStatusText;
+    [SerializeField] private Text _versionText;
+    [SerializeField] private Text _cameraPanelDateText;
+    [SerializeField] private Text _cameraPanelSessionText;
+    [SerializeField] private GameObject _sandClock;
 
     #endregion
 
@@ -38,7 +46,12 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("ar-EG");
 
+        _dateText.text = System.DateTime.Now.ToShortDateString();
+        _cameraPanelDateText.text = System.DateTime.Now.ToShortDateString();
+        UpdateSessionNumberInCameraView(1);
+        _versionText.text = "v" + Application.version;
     }
 
     // Update is called once per frame
@@ -73,14 +86,79 @@ public class UIManager : MonoBehaviour
     {
         foreach (var item in classes)
         {
-            _dllClasses.CreateNewItemFast(item.class_title, _classIcon);
+            _dllClasses.CreateNewItemFast(item.ClassTitle, _classIcon);
             _dllClasses.SetupDropdown();
         }
 
         _dllClasses.dropdownEvent.AddListener(ApplicationManager.Instance.GetParticipants);
+        _dllClasses.dropdownEvent.AddListener(ApplicationManager.Instance.AssignClass);
 
         _dllClasses.ChangeDropdownInfo(0);
+        ApplicationManager.Instance.AssignClass(0);
         ApplicationManager.Instance.GetParticipants(0);
+    }
+
+    /// <summary>
+    /// Updates the list of servants with the date extracted from the Database
+    /// </summary>
+    /// <param name="servants">The list of servants to be displayed</param>
+    public void UpdateServantsList(Servant[] servants)
+    {
+        string savedServant = PlayerPrefs.GetString("ServantName", "");
+        int selectedServant = -1;
+
+        for (int i = 0; i < servants.Length; i++)
+        {
+            if (savedServant.Equals(servants[i].FullName))
+                selectedServant = i;
+
+            _dllServants.CreateNewItemFast(servants[i].FullName, _classIcon);
+            _dllServants.SetupDropdown();
+        }
+
+        _dllServants.dropdownEvent.AddListener(ApplicationManager.Instance.AssignServant);
+
+        if (selectedServant != -1)
+        {
+            _dllServants.ChangeDropdownInfo(selectedServant);
+            ApplicationManager.Instance.AssignServant(selectedServant);
+        }
+    }
+
+    /// <summary>
+    /// Updates the connection status text on the UI
+    /// </summary>
+    /// <param name="status">The connection status bool</param>
+    public void UpdateConnectionStatus (bool status)
+    {
+        if (status == true)
+        {
+            _connectionStatusText.text = "ONLINE";
+            _connectionStatusText.color = Color.green;
+        }
+        else
+        {
+            _connectionStatusText.text = "OFFLINE";
+            _connectionStatusText.color = Color.red;
+        }
+    }
+
+    /// <summary>
+    /// Updates the session number in the camera view
+    /// </summary>
+    /// <param name="n">The session number</param>
+    public void UpdateSessionNumberInCameraView(int n)
+    {
+        _cameraPanelSessionText.text = n.ToString();
+    }
+
+    /// <summary>
+    /// Shows or hides the sand clock icon in the camera panel
+    /// </summary>
+    /// <param name="status">The toggle value of the sand clock</param>
+    public void ToggleSandClock(bool status)
+    {
+        _sandClock.SetActive(status);
     }
 
     #endregion

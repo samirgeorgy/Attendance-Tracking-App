@@ -14,6 +14,7 @@ namespace Michsky.UI.ModernUIPack
 
         public enum PlayType
         {
+            ON_ACTIVE,
             CLICK,
             ON_POINTER_ENTER
         }
