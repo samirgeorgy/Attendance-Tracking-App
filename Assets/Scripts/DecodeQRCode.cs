@@ -13,7 +13,7 @@ public class AttendanceRecordJson
     public int Fk_Participant_Id;
     public int Fk_Class_Id;
     public int Fk_Session_Id;
-    public int Fk_Servant_Id;
+    public int Fk_User_Id;
     public string Attendance_Date;
 }
 
@@ -247,7 +247,7 @@ public class DecodeQRCode : MonoBehaviour
                 record.Fk_Participant_Id = _participantId;
                 record.Fk_Class_Id = ApplicationManager.Instance.SelectedClass;
                 record.Fk_Session_Id = ApplicationManager.Instance.SelectedSession;
-                record.Fk_Servant_Id = ApplicationManager.Instance.SelectedServant;
+                record.Fk_User_Id = Authenticator.Instance.UserInfo.Id;
                 record.Attendance_Date = DateTime.Now.ToShortDateString();
 
                 string data = JsonUtility.ToJson(record);

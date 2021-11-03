@@ -46,25 +46,6 @@ public class ClassParticipant
     public string FullName;
 }
 
-/// <summary>
-/// Root Class containing list of servants for JSON parsing
-/// </summary>
-[Serializable]
-public class RootServant
-{
-    public Servant[] servants;
-}
-
-/// <summary>
-/// Defines a servant participant
-/// </summary>
-[Serializable]
-public class Servant
-{
-    public int Id;
-    public string FullName;
-}
-
 #endregion
 
 public class ApplicationManager : MonoBehaviour
@@ -82,10 +63,8 @@ public class ApplicationManager : MonoBehaviour
 
     private AvailableClass[] _availableClasses;
     private ClassParticipant[] _classParticipants;
-    private Servant[] _servants;
     private int _selectedSession = 1;
     private int _selectedClass = 0;
-    private int _servantID = -1;
 
     private bool _dataDownloaded = false;
 
@@ -118,27 +97,11 @@ public class ApplicationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets a list of the servants
-    /// </summary>
-    public Servant[] Servants
-    {
-        get { return _servants; }
-    }
-
-    /// <summary>
     /// Gets the ID of the current selected session
     /// </summary>
     public int SelectedSession
     {
         get { return _selectedSession; }
-    }
-
-    /// <summary>
-    /// Gets the ID of the current selected servant
-    /// </summary>
-    public int SelectedServant
-    {
-        get { return _servantID; }
     }
 
     /// <summary>
@@ -171,7 +134,6 @@ public class ApplicationManager : MonoBehaviour
     void Start()
     {
         StartCoroutine(GetClassesRoutine());
-        StartCoroutine(GetServantsRoutine());
 
         _dllSessions.dropdownEvent.AddListener(AssignSession);
     }
@@ -212,30 +174,6 @@ public class ApplicationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Assigns the current Servant
-    /// </summary>
-    /// <param name="n">The index of the servant</param>
-    public void AssignServant(int n)
-    {
-        string selectedItem = _dllServants.dropdownItems[n].itemName;
-
-        if (selectedItem != null)
-        {
-            foreach (var item in _servants)
-            {
-                if (selectedItem.Equals(item.FullName))
-                {
-                    _servantID = item.Id;
-
-                    PlayerPrefs.SetString("ServantName", item.FullName);
-
-                    break;
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Changes the session ID
     /// </summary>
     /// <param name="n">The index of the session</param>
@@ -256,6 +194,14 @@ public class ApplicationManager : MonoBehaviour
     public void ChangeSession(int n)
     {
         _selectedSession = n;
+    }
+
+    /// <summary>
+    /// Logs the user out
+    /// </summary>
+    public void LogOut()
+    {
+        Authenticator.Instance.Logout();
     }
 
     /// <summary>
@@ -330,43 +276,6 @@ public class ApplicationManager : MonoBehaviour
                     UIManager.Instance.UpdateConnectionStatus(true);
 
                     UIManager.Instance.UpdateUserMsg("Ready", "Ready to scan for attendance.");
-                    break;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Reads the data from the web service and adding them to the interface
-    /// </summary>
-    IEnumerator GetServantsRoutine()
-    {
-        //Processing the request
-        using (UnityWebRequest request = UnityWebRequest.Get(_servantsURL))
-        {
-            yield return request.SendWebRequest();
-
-            switch (request.result)
-            {
-                case UnityWebRequest.Result.ConnectionError:
-                case UnityWebRequest.Result.DataProcessingError:
-                    _dataDownloaded = false;
-                    UIManager.Instance.UpdateUserMsg("ERROR", request.error);
-                    break;
-                case UnityWebRequest.Result.ProtocolError:
-                    UIManager.Instance.UpdateUserMsg("ERROR", request.error);
-                    _dataDownloaded = false;
-                    break;
-                case UnityWebRequest.Result.Success:
-                    //Downloading the JSON data
-                    var jsonData = request.downloadHandler.text;
-                    var jsonClasses = JsonUtility.FromJson<RootServant>("{\"servants\":" + jsonData + "}");
-
-                    _servants = jsonClasses.servants;
-
-                    _dataDownloaded = true;
-
-                    //Adding the data to the interface list
-                    UIManager.Instance.UpdateServantsList(_servants);
                     break;
             }
         }

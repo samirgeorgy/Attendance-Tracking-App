@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 using Michsky.UI.ModernUIPack;
 
@@ -15,6 +16,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Sprite _notificationIcon;
     [SerializeField] private Sprite _classIcon;
     [SerializeField] private Text _dateText;
+    [SerializeField] private Text _servantNameText;
     [SerializeField] private Text _connectionStatusText;
     [SerializeField] private Text _versionText;
     [SerializeField] private Text _cameraPanelDateText;
@@ -46,18 +48,17 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("ar-EG");
+        if (SceneManager.GetActiveScene().buildIndex == 1)
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("ar-EG");
 
-        _dateText.text = System.DateTime.Now.ToShortDateString();
-        _cameraPanelDateText.text = System.DateTime.Now.ToShortDateString();
-        UpdateSessionNumberInCameraView(1);
-        _versionText.text = "v" + Application.version;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+            _dateText.text = System.DateTime.Now.ToShortDateString();
+            _servantNameText.text = Authenticator.Instance.UserInfo.FullName;
+            _cameraPanelDateText.text = System.DateTime.Now.ToShortDateString();
+            UpdateSessionNumberInCameraView(1);
+            _versionText.text = "v" + Application.version;
+        }
+        
     }
 
     #endregion
@@ -96,33 +97,6 @@ public class UIManager : MonoBehaviour
         _dllClasses.ChangeDropdownInfo(0);
         ApplicationManager.Instance.AssignClass(0);
         ApplicationManager.Instance.GetParticipants(0);
-    }
-
-    /// <summary>
-    /// Updates the list of servants with the date extracted from the Database
-    /// </summary>
-    /// <param name="servants">The list of servants to be displayed</param>
-    public void UpdateServantsList(Servant[] servants)
-    {
-        string savedServant = PlayerPrefs.GetString("ServantName", "");
-        int selectedServant = -1;
-
-        for (int i = 0; i < servants.Length; i++)
-        {
-            if (savedServant.Equals(servants[i].FullName))
-                selectedServant = i;
-
-            _dllServants.CreateNewItemFast(servants[i].FullName, _classIcon);
-            _dllServants.SetupDropdown();
-        }
-
-        _dllServants.dropdownEvent.AddListener(ApplicationManager.Instance.AssignServant);
-
-        if (selectedServant != -1)
-        {
-            _dllServants.ChangeDropdownInfo(selectedServant);
-            ApplicationManager.Instance.AssignServant(selectedServant);
-        }
     }
 
     /// <summary>
